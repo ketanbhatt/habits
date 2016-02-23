@@ -1,6 +1,7 @@
 'use strict';
 
 const electron = require('electron');
+const ipc = electron.ipcMain;
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 
@@ -11,6 +12,7 @@ var constants = require('./constants');
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 var mainWindow = null;
+var settingsWindow = null;
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -24,17 +26,7 @@ app.on('window-all-closed', function () {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
-
-	// Get user's name
-	var userName = config.readSettings(constants.userNameKey);
-
-	// Check if the user has entered his name
-	if (userName) {
-		openHome()
-	} else {
-		config.saveSettings(constants.userNameKey, "John Doe")
-		openHome()
-	}
+	openSettings()
 });
 
 function openHome() {
@@ -58,3 +50,27 @@ function openHome() {
 		mainWindow = null;
 	});
 }
+
+function openSettings() {
+	// Create the browser window.
+	settingsWindow = new BrowserWindow({
+		width: 800,
+		height: 600
+	});
+
+	// and load the index.html of the app.
+	settingsWindow.loadURL('file://' + __dirname + '/app/settings.html');
+
+	settingsWindow.webContents.openDevTools();
+
+	// Emitted when the window is closed.
+	settingsWindow.on('closed', function () {
+		openHome()
+	});
+}
+
+ipc.on('close-settings-window', function () {
+	if (settingsWindow) {
+		settingsWindow.close();
+	}
+});
