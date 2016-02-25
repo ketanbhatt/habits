@@ -1,3 +1,3 @@
 module.exports = {
-	"userNameKey": "userName"
+  userNameKey: 'userName',
 };

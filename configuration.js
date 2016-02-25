@@ -1,22 +1,18 @@
 'use strict';
 
-var nconf = require('nconf').file({file: getUserHome() + '/habits-config.json'});
+function getUserHome() {
+  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+const nconf = require('nconf').file({ file: `${getUserHome()}/habits-config.json` });
 
 function saveSettings(settingKey, settingValue) {
-	nconf.set(settingKey, settingValue);
-	nconf.save();
+  nconf.set(settingKey, settingValue);
+  nconf.save();
 }
 
 function readSettings(settingKey) {
-	nconf.load();
-	return nconf.get(settingKey);
+  nconf.load();
+  return nconf.get(settingKey);
 }
 
-function getUserHome() {
-	return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
-}
-
-module.exports = {
-	saveSettings: saveSettings,
-	readSettings: readSettings
-};
+module.exports = { saveSettings, readSettings };

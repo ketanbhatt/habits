@@ -1,13 +1,14 @@
 'use strict';
 
-var ipc = require("electron").ipcRenderer;
-var config = require('../configuration');  // TODO: Fix this bad way of refrencing
-var constants = require('../constants');  // TODO: Fix this bad way of refrencing
-var userNameButton = document.querySelector('#userNameButton');
-var userNameField = document.querySelector('#userNameField');
+const ipc = require('electron').ipcRenderer;
+const config = require('../configuration');  // TODO: Fix this bad way of refrencing
+const constants = require('../constants');  // TODO: Fix this bad way of refrencing
 
-userNameButton.addEventListener("click", function(){
-	var name = userNameField.value;
-	config.saveSettings(constants.userNameKey, name);
-	ipc.send('close-settings-window');
+const userNameButton = document.querySelector('#userNameButton');
+const userNameField = document.querySelector('#userNameField');
+
+userNameButton.addEventListener('click', () => {
+  const name = userNameField.value;
+  config.saveSettings(constants.userNameKey, name);
+  ipc.send('close-settings-window');
 });

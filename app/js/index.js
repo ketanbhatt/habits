@@ -1,7 +1,7 @@
 'use strict';
 
-var config = require('../configuration');  // TODO: Fix this bad way of refrencing
-var constants = require('../constants');  // TODO: Fix this bad way of refrencing
-var userName = document.querySelector('#userName');
+const config = require('../configuration');  // TODO: Fix this bad way of refrencing
+const constants = require('../constants');  // TODO: Fix this bad way of refrencing
+const userName = document.querySelector('#userName');
 
 userName.innerHTML = config.readSettings(constants.userNameKey);
