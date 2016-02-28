@@ -81,7 +81,6 @@ app.on('window-all-closed', () => {
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
   // If userName is not present then open Settings else open Home
-  if (!config.readSettings(constants.userNameKey)) {
-    openSettings();
-  } else openHome();
+  if (!config.readSettings(constants.userNameKey)) openSettings();
+  else openHome();
 });
