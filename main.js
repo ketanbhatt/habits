@@ -1,5 +1,7 @@
 'use strict';
 
+const appRoot = require('app-root-path');
+
 const electron = require('electron');
 const ipc = electron.ipcMain;
 const app = electron.app;  // Module to control application life.
@@ -9,7 +11,6 @@ const BrowserWindow = electron.BrowserWindow;  // Module to create native browse
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let settingsWindow = null;
-const dirName = __dirname;
 
 function openHome() {
   // Create the browser window.
@@ -19,7 +20,7 @@ function openHome() {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadURL(`file://${dirName}/app/index.html`);
+  mainWindow.loadURL(`file://${appRoot}/app/index.html`);
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -41,7 +42,7 @@ function openSettings() {
   });
 
   // and load the index.html of the app.
-  settingsWindow.loadURL(`file://${dirName}/app/settings.html`);
+  settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
 
   settingsWindow.webContents.openDevTools();
 

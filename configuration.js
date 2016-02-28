@@ -1,9 +1,8 @@
 'use strict';
 
-function getUserHome() {
-  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
-}
-const nconf = require('nconf').file({ file: `${getUserHome()}/habits-config.json` });
+const appRoot = require('app-root-path');
+
+const nconf = require('nconf').file({ file: `${appRoot}/habits-config.json` });
 
 function saveSettings(settingKey, settingValue) {
   nconf.set(settingKey, settingValue);

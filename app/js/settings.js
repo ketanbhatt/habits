@@ -1,8 +1,10 @@
 'use strict';
 
+const reqlib = require('app-root-path').require;
+
 const ipc = require('electron').ipcRenderer;
-const config = require('../configuration');  // TODO: Fix this bad way of refrencing
-const constants = require('../constants');  // TODO: Fix this bad way of refrencing
+const config = reqlib('configuration.js');
+const constants = reqlib('constants.js');
 
 const userNameButton = document.querySelector('#userNameButton');
 const userNameField = document.querySelector('#userNameField');
