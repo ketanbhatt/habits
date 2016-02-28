@@ -1,9 +1,13 @@
 'use strict';
 
 const electron = require('electron');
-const ipc = electron.ipcMain;
+
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
+const ipc = electron.ipcMain;
+
+const config = require('./configuration');  // TODO: Fix this bad way of refrencing
+const constants = require('./constants');  // TODO: Fix this bad way of refrencing
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -34,6 +38,8 @@ function openHome() {
 }
 
 function openSettings() {
+  if (settingsWindow) return;
+
   // Create the browser window.
   settingsWindow = new BrowserWindow({
     width: 800,
@@ -47,12 +53,17 @@ function openSettings() {
 
   // Emitted when the window is closed.
   settingsWindow.on('closed', () => {
-    openHome();
+    settingsWindow = null;
   });
 }
 
 ipc.on('close-settings-window', () => {
   if (settingsWindow) {
+    // Redraw Home
+    if (mainWindow) mainWindow.close();
+    openHome();
+
+    // Close Settings
     settingsWindow.close();
   }
 });
@@ -69,5 +80,7 @@ app.on('window-all-closed', () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
-  openSettings();
+  // If userName is not present then open Settings else open Home
+  if (!config.readSettings(constants.userNameKey)) openSettings();
+  else openHome();
 });
