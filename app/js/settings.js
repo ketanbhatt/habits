@@ -29,7 +29,3 @@ saveButton.addEventListener('click', () => {
   }
   ipc.send('close-settings-window');
 });
-
-
-
-

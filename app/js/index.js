@@ -9,24 +9,8 @@ const db = reqlib('nedb.js');
 const userName = document.querySelector('#userName');
 userName.innerHTML = config.readSettings(constants.userNameKey);
 
-
 function displayHabits(inputDate, callback) {
-  const habitsTable = document.createElement('table');
-  const habitsTableRow = document.createElement('tr');
-  const habitsTableHead1 = document.createElement('th');
-  const habitsTableHead1Value = document.createTextNode('Habit');
-  const habitsTableHead2 = document.createElement('th');
-  const habitsTableHead2Value = document.createTextNode('Fulfillment');
-  const habitsTableHead3 = document.createElement('th');
-  const habitsTableHead3Value = document.createTextNode('Count');
-
-  habitsTable.appendChild(habitsTableRow);
-  habitsTableRow.appendChild(habitsTableHead1);
-  habitsTableRow.appendChild(habitsTableHead2);
-  habitsTableRow.appendChild(habitsTableHead3);
-  habitsTableHead1.appendChild(habitsTableHead1Value);
-  habitsTableHead2.appendChild(habitsTableHead2Value);
-  habitsTableHead3.appendChild(habitsTableHead3Value);
+  const habitsTable = document.querySelector('#habitsTable');
 
   db.habits.count({}, (err, count) => {
     // console.log(count);
@@ -51,12 +35,13 @@ function displayHabits(inputDate, callback) {
         habitsTD3.appendChild(habitsTD3V);
         habitsTable.appendChild(habitsTR);
       }
+
       callback(inputDate);
     });
   });
 
-  const habitsDiv = document.querySelector('#habits');
-  habitsDiv.appendChild(habitsTable);
+  // const habitsDiv = document.querySelector('#habits');
+  // habitsDiv.appendChild(habitsTable);
 }
 
 function displayCount(inputDate) {
