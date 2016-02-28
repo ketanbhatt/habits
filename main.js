@@ -1,15 +1,15 @@
 'use strict';
 
 const appRoot = require('app-root-path');
+const reqlib = appRoot.require;
 
 const electron = require('electron');
-
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const ipc = electron.ipcMain;
 
-const config = require('./configuration');  // TODO: Fix this bad way of refrencing
-const constants = require('./constants');  // TODO: Fix this bad way of refrencing
+const config = reqlib('configuration.js');
+const constants = reqlib('constants.js');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

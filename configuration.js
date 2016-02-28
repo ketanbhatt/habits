@@ -1,8 +1,7 @@
 'use strict';
 
 const appRoot = require('app-root-path');
-
-const nconf = require('nconf').file({ file: `${appRoot}/habits-config.json` });
+const nconf = require('nconf').file({ file: `${appRoot}/data/habits-config.json` });
 
 function saveSettings(settingKey, settingValue) {
   nconf.set(settingKey, settingValue);
