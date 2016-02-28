@@ -34,3 +34,5 @@ node_modules
 
 .idea/
 .DS_Store
+
+habits-config.json
