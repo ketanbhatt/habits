@@ -68,6 +68,7 @@ function displayCount(inputDate) {
           date: inputDate,
           commits: [],
         };
+        // ID for Habit is of format 'habit0'
         for (let i = 0; i < count; i++) {
           commit.commits.push({ habit: `habit${i}`, count: 0 });
         }
@@ -88,4 +89,5 @@ function displayCount(inputDate) {
   });
 }
 
-displayHabits(1, displayCount);
+const inputDate = 1;  // TODO: Have to figure out a way to represent date
+displayHabits(inputDate, displayCount);
