@@ -1,7 +1,14 @@
 'use strict';
 
-const config = require('../configuration');  // TODO: Fix this bad way of refrencing
-const constants = require('../constants');  // TODO: Fix this bad way of refrencing
-const userName = document.querySelector('#userName');
+const reqlib = require('app-root-path').require;
 
+const config = reqlib('configuration.js');
+const constants = reqlib('constants.js');
+const db = reqlib('nedb.js');
+
+const userName = document.querySelector('#userName');
 userName.innerHTML = config.readSettings(constants.userNameKey);
+
+db.habits.count({}, (err, count) => {
+  console.log(count);
+});

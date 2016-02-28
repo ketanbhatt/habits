@@ -1,19 +1,20 @@
 'use strict';
 
-const electron = require('electron');
+const appRoot = require('app-root-path');
+const reqlib = appRoot.require;
 
+const electron = require('electron');
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const ipc = electron.ipcMain;
 
-const config = require('./configuration');  // TODO: Fix this bad way of refrencing
-const constants = require('./constants');  // TODO: Fix this bad way of refrencing
+const config = reqlib('configuration.js');
+const constants = reqlib('constants.js');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let settingsWindow = null;
-const dirName = __dirname;
 
 function openHome() {
   // Create the browser window.
@@ -23,7 +24,7 @@ function openHome() {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadURL(`file://${dirName}/app/index.html`);
+  mainWindow.loadURL(`file://${appRoot}/app/index.html`);
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -47,7 +48,7 @@ function openSettings() {
   });
 
   // and load the index.html of the app.
-  settingsWindow.loadURL(`file://${dirName}/app/settings.html`);
+  settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
 
   settingsWindow.webContents.openDevTools();
 
