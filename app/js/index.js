@@ -1,4 +1,5 @@
 'use strict';
+/* globals CalHeatMap */
 
 const reqlib = require('app-root-path').require;
 
