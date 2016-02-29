@@ -15,6 +15,7 @@
   "dependencies": {
     "app-root-path": "^1.0.0",
     "cal-heatmap": "^3.5.4",
+    "d3": "^3.5.16",
     "nconf": "^0.8.4",
     "nedb": "^1.8.0"
   }
