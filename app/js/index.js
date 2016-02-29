@@ -3,6 +3,8 @@
 
 const reqlib = require('app-root-path').require;
 
+const ipc = require('electron').ipcRenderer;
+
 const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 const db = reqlib('nedb.js');
@@ -10,6 +12,11 @@ const db = reqlib('nedb.js');
 const cal = new CalHeatMap();
 const userName = document.querySelector('#userName');
 userName.innerHTML = config.readSettings(constants.userNameKey);
+
+const settingsEl = document.querySelector('.settings');
+settingsEl.addEventListener('click', () => {
+  ipc.send('open-settings-window');
+});
 
 // TODO: uncomment
 // const habitsTable = document.querySelector('#habitsTable');

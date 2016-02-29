@@ -19,8 +19,9 @@ let settingsWindow = null;
 function openHome() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 200,
-    height: 400,
+    width: 800,
+    height: 600,
+    frame: false,
   });
 
   // and load the index.html of the app.
@@ -43,8 +44,8 @@ function openSettings() {
 
   // Create the browser window.
   settingsWindow = new BrowserWindow({
-    width: 200,
-    height: 400,
+    width: 800,
+    height: 600,
   });
 
   // and load the index.html of the app.
@@ -57,6 +58,12 @@ function openSettings() {
     settingsWindow = null;
   });
 }
+
+ipc.on('open-settings-window', () => {
+  if (settingsWindow === null) {
+    openSettings();
+  }
+});
 
 ipc.on('close-settings-window', () => {
   if (settingsWindow) {
