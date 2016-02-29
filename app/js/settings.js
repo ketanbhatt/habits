@@ -9,23 +9,21 @@ const constants = reqlib('constants.js');
 const db = reqlib('nedb.js');
 
 const saveButton = document.querySelector('#saveButton');
-const userNameField = document.querySelector('#userNameField');
-
 saveButton.addEventListener('click', () => {
+  const userNameField = document.querySelector('#userNameField');
   const name = userNameField.value;
   config.saveSettings(constants.userNameKey, name);
 
+  const habitsList = document.querySelector('#habitsForm').children;
   function storeHabits(msg, callback) {
-    for (let i = 0; i < 3; i++) {
+    // Skip userName, br, saveButton child
+    for (let i = 2; i < habitsList.length - 1; i += 2) {
+      // console.log(habitsList[i].value);
       const habit = {
-        title: document.querySelector(`#habit${i}`).value,
-        created_at: Date(),
-        fulfillment: document.querySelector(`#habit${i}f`).value,
-        _id: `habit${i}`,
+        title: habitsList[i].value,
       };
       db.habits.insert(habit, (err, newDoc) => {   // Callback is optional
         // newDoc is the newly inserted document, including its _id
-        // newDoc has no key called notToBeSaved since its value was undefined
         console.log(newDoc);
       });
     }
