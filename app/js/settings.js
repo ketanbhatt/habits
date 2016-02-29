@@ -14,18 +14,22 @@ const userNameField = document.querySelector('#userNameField');
 saveButton.addEventListener('click', () => {
   const name = userNameField.value;
   config.saveSettings(constants.userNameKey, name);
-  for (let i = 0; i < 3; i++) {
-    const habit = {
-      title: document.querySelector(`#habit${i}`).value,
-      created_at: 0, // TODO: Need right date here
-      fulfillment: document.querySelector(`#habit${i}f`).value,
-      _id: `habit${i}`,
-    };
-    db.habits.insert(habit, (err, newDoc) => {   // Callback is optional
-      // newDoc is the newly inserted document, including its _id
-      // newDoc has no key called notToBeSaved since its value was undefined
-      console.log(newDoc);
-    });
+
+  function storeHabits(msg, callback) {
+    for (let i = 0; i < 3; i++) {
+      const habit = {
+        title: document.querySelector(`#habit${i}`).value,
+        created_at: Date(),
+        fulfillment: document.querySelector(`#habit${i}f`).value,
+        _id: `habit${i}`,
+      };
+      db.habits.insert(habit, (err, newDoc) => {   // Callback is optional
+        // newDoc is the newly inserted document, including its _id
+        // newDoc has no key called notToBeSaved since its value was undefined
+        console.log(newDoc);
+      });
+    }
+    callback(msg);
   }
-  ipc.send('close-settings-window');
+  storeHabits('close-settings-window', ipc.send);
 });

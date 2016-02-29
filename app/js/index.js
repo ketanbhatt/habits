@@ -9,42 +9,8 @@ const db = reqlib('nedb.js');
 const userName = document.querySelector('#userName');
 userName.innerHTML = config.readSettings(constants.userNameKey);
 
-function displayHabits(inputDate, callback) {
-  const habitsTable = document.querySelector('#habitsTable');
-
-  db.habits.count({}, (err, count) => {
-    // console.log(count);
-    db.habits.find({}, (_err, habits) => {
-      // console.log(habits);
-
-      for (let i = 0; i < count; i++) {
-        const habitsTR = document.createElement('tr');
-        const habitsTD1 = document.createElement('td');
-        const habitsTD2 = document.createElement('td');
-        const habitsTD3 = document.createElement('td');
-        habitsTD3.id = habits[i]._id;
-        const habitsTD1V = document.createTextNode(`${habits[i].title}`);
-        const habitsTD2V = document.createTextNode(`${habits[i].fulfillment}`);
-        const habitsTD3V = document.createTextNode(0);
-
-        habitsTR.appendChild(habitsTD1);
-        habitsTR.appendChild(habitsTD2);
-        habitsTR.appendChild(habitsTD3);
-        habitsTD1.appendChild(habitsTD1V);
-        habitsTD2.appendChild(habitsTD2V);
-        habitsTD3.appendChild(habitsTD3V);
-        habitsTable.appendChild(habitsTR);
-      }
-
-      callback(inputDate);
-    });
-  });
-
-  // const habitsDiv = document.querySelector('#habits');
-  // habitsDiv.appendChild(habitsTable);
-}
-
-function displayCount(inputDate) {
+const habitsTable = document.querySelector('#habitsTable');
+function display(inputDate) {
   db.commits.find({ date: inputDate }, (err, docs) => {
     if (docs.length === 0) {
       // If no commit is present for the date
@@ -58,21 +24,37 @@ function displayCount(inputDate) {
           commit.commits.push({ habit: `habit${i}`, count: 0 });
         }
         // Add a new commit to the db for the date
-        db.commits.insert(commit, (__err, newDoc) => {
-          // Callback
-          console.log(newDoc);
+        db.commits.insert(commit, () => {
+          // Display for the date
+          for (let i = 0; i < count; i++) {
+            db.habits.find({ _id: `habit${i}` }, (__err, habits) => {
+              // console.log(habit);
+              const tr = `<tr><td>${habits[0].title}</td>` +
+              `<td>${habits[0].fulfillment}</td>` +
+              '<td >0</td></tr>';
+              // `<td id=${habits[0]._id}>0</td></tr>`;
+              habitsTable.innerHTML += tr;
+            });
+          }
         });
       });
     } else {
       // Commit for the date is present
       const doc = docs[0];
+      // Display for the date
       for (let i = 0; i < doc.commits.length; i++) {
-        const hb = document.querySelector(`#${doc.commits[i].habit}`);
-        hb.innerHTML = doc.commits[i].count;
+        db.habits.find({ _id: doc.commits[i].habit }, (_err, habits) => {
+          // console.log(habit);
+          const tr = `<tr><td>${habits[0].title}</td>` +
+          `<td>${habits[0].fulfillment}</td>` +
+          `<td>${doc.commits[i].count}</td></tr>`;
+          // `<td id=${habits[0]._id}>${doc.commits[i].count}</td></tr>`;
+          habitsTable.innerHTML += tr;
+        });
       }
     }
   });
 }
 
-const inputDate = 1;  // TODO: Have to figure out a way to represent date
-displayHabits(inputDate, displayCount);
+const inputDate = Date().slice(0, 15);
+display(inputDate);
