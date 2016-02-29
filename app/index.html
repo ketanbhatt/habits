@@ -19,14 +19,15 @@
     </header>
     <div class="window-content">
         <div class="padded-more">
-            Hello <span id="userName"></span>
-            <table id="habitsTable">
-                <tr>
-                    <th>Habit</th>
-                    <th>Fulfillment</th>
-                    <th>Count</th>
-                    <th></th>
-                </tr>
+            Hello <span id="userName"></span>, your habits and their ID (like you care) are:
+            <table id="habitsTable" class="table-striped padded-vertically">
+                <thead>
+                    <tr>
+                        <th>Habit</th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
             </table>
             <div id="cal-heatmap"></div>
         </div>

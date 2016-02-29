@@ -19,70 +19,35 @@ settingsEl.addEventListener('click', () => {
 });
 
 // TODO: uncomment
-// const habitsTable = document.querySelector('#habitsTable');
-function display(inputDate) {
-  db.commits.find({ date: inputDate }, (err, docs) => {
-    if (docs.length === 0) {
-      // If no commit is present for the date
-      db.habits.find({}, (_err, habits) => {
-        const commit = {
-          date: inputDate,
-          commits: {},
-        };
+const habitsTableBody = document.querySelector('#habitsTable tbody');
 
-        // Init commits for to habit with count as 0
-        for (let i = 0; i < habits.length; i++) {
-          commit.commits[habits[`${i}`]._id] = 0;
-        }
-
-        // Add the new commit to the db for the date
-        db.commits.insert(commit, () => {
-          // TODO : Display for the date
-          // for (let i = 0; i < commit.commits.length; i++) {
-          //   db.habits.find({ _id: `habit${i}` }, (__err, habits) => {
-          //     // console.log(habit);
-          //     const tr = `<tr><td>${habits[0].title}</td>` +
-          //     `<td>${habits[0].fulfillment}</td>` +
-          //     '<td>0</td></tr>';
-          //     // `<td id=${habits[0]._id}>0</td></tr>`;
-          //     habitsTable.innerHTML += tr;
-          //   });
-          // }
-        });
-      });
-    } else {
-      // Commit for the date is present
-      const doc = docs[0];
-      console.log(doc);
-      // TODO : Display for the date
-      // for (let i = 0; i < doc.commits.length; i++) {
-      //   db.habits.find({ _id: doc.commits[i].habit }, (_err, habits) => {
-      //     // console.log(habit);
-      //     const tr = `<tr><td>${habits[0].title}</td>` +
-      //     `<td>${doc.commits[i].count}</td></tr>`;
-      //     // `<td id=${habits[0]._id}>${doc.commits[i].count}</td></tr>`;
-      //     habitsTable.innerHTML += tr;
-      //   });
-      // }
+function display() {
+  db.habits.find({}, (err, habits) => {
+    let tableRowHTML = '';
+    for (let i = 0, len = habits.length; i < len; i++) {
+      const rowHabit = `<td>${habits[i].title}</td>`;
+      const rowID = `<td>${habits[i]._id}</td>`;
+      tableRowHTML += `<tr>${rowHabit}${rowID}</tr>`;
     }
+    habitsTableBody.innerHTML = tableRowHTML;
   });
 }
 
-function getCurrentDate() {
-  const dt = new Date();
-  const epochDt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).getTime();
-  // Convert to seconds
-  const currentDate = Math.floor(epochDt / 1000);
-  return currentDate;
-}
-const inputDate = getCurrentDate();
-display(inputDate);
+//  function getCurrentDate() {
+//  const dt = new Date();
+//  const epochDt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).getTime();
+//  // Convert to seconds
+//  const currentDate = Math.floor(epochDt / 1000);
+//  return currentDate;
+//  }
+
+display();
 
 const data = {
-  1456180083: 13,
-  1456282083: 24,
-  1456482083: 1,
-  1456680083: 5,
+  1456380083: 13,
+  1456682083: 24,
+  1457482083: 1,
+  1459680083: 5,
 };
 
 cal.init({
