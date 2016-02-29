@@ -19,8 +19,8 @@ let settingsWindow = null;
 function openHome() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 200,
+    height: 400,
   });
 
   // and load the index.html of the app.
@@ -43,14 +43,14 @@ function openSettings() {
 
   // Create the browser window.
   settingsWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 200,
+    height: 400,
   });
 
   // and load the index.html of the app.
   settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
 
-  settingsWindow.webContents.openDevTools();
+  // settingsWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   settingsWindow.on('closed', () => {
