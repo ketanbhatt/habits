@@ -21,6 +21,7 @@ function openHome() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    frame: false,
   });
 
   // and load the index.html of the app.
@@ -57,6 +58,12 @@ function openSettings() {
     settingsWindow = null;
   });
 }
+
+ipc.on('open-settings-window', () => {
+  if (settingsWindow === null) {
+    openSettings();
+  }
+});
 
 ipc.on('close-settings-window', () => {
   if (settingsWindow) {
