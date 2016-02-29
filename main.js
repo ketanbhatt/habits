@@ -51,7 +51,7 @@ function openSettings() {
   // and load the index.html of the app.
   settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
 
-  settingsWindow.webContents.openDevTools();
+  // settingsWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   settingsWindow.on('closed', () => {

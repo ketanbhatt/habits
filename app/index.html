@@ -3,6 +3,9 @@
 <head>
     <title>Habits</title>
     <link rel="stylesheet" type="text/css" href="css/photon.min.css">
+    <link rel="stylesheet" href="../node_modules/cal-heatmap/cal-heatmap.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <script type="text/javascript" src="../node_modules/cal-heatmap/cal-heatmap.min.js"></script>
 </head>
 <body>
 <div class="window">
@@ -16,7 +19,16 @@
     </header>
     <div class="window-content">
         <div class="padded-more">
-            <span id="userName"></span>
+            Hello <span id="userName"></span>
+            <table id="habitsTable">
+                <tr>
+                    <th>Habit</th>
+                    <th>Fulfillment</th>
+                    <th>Count</th>
+                    <th></th>
+                </tr>
+            </table>
+            <div id="cal-heatmap"></div>
         </div>
     </div>
 </div>
