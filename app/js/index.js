@@ -18,30 +18,70 @@ settingsEl.addEventListener('click', () => {
   ipc.send('open-settings-window');
 });
 
-// TODO: uncomment
 const habitsTableBody = document.querySelector('#habitsTable tbody');
 
-function display() {
+function displayHabits(callback) {
   db.habits.find({}, (err, habits) => {
     let tableRowHTML = '';
     for (let i = 0, len = habits.length; i < len; i++) {
       const rowHabit = `<td>${habits[i].title}</td>`;
-      const rowID = `<td>${habits[i]._id}</td>`;
+      const rowID = `<td><button class="commitButton" value=${habits[i]._id}>+</button></td>`;
       tableRowHTML += `<tr>${rowHabit}${rowID}</tr>`;
     }
     habitsTableBody.innerHTML = tableRowHTML;
+    callback();
   });
 }
 
-//  function getCurrentDate() {
-//  const dt = new Date();
-//  const epochDt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).getTime();
-//  // Convert to seconds
-//  const currentDate = Math.floor(epochDt / 1000);
-//  return currentDate;
-//  }
+function getCurrentDate() {
+  const dt = new Date();
+  const epochDt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).getTime();
+  // Convert to seconds
+  const currentDate = Math.floor(epochDt / 1000);
+  return currentDate;
+}
 
-display();
+function addCommitButton() {
+  const commitButtons = document.getElementsByClassName('commitButton');
+  for (let i = 0; i < commitButtons.length; i++) {
+    commitButtons[i].addEventListener('click', () => {
+      const currentDate = getCurrentDate();
+
+      // Get the commit for the day
+      db.commits.find({ date: currentDate }, (err, commit) => {
+        if (commit.length === 0) {
+          // Init a commit for the day
+          // console.log('init');
+          const newCommit = {
+            date: currentDate,
+            commits: {},
+          };
+          db.habits.find({}, (_err, habits) => {
+            for (let j = 0; j < habits.length; j++) {
+              newCommit.commits[habits[j]._id] = 0;
+            }
+            newCommit.commits[commitButtons[i].value] += 1;
+
+            db.commits.insert(newCommit, (__err, newDoc) => {
+              console.log(newDoc);
+            });
+          });
+        } else {
+          // Update the commit for the day
+          // console.log('update');
+          const newCommit = commit[0];
+          newCommit.commits[commitButtons[i].value] += 1;
+
+          db.commits.update({ _id: commit[0]._id }, newCommit, {}, (_err, numReplaced) => {
+            console.log(numReplaced);
+          });
+        }
+      });
+    });
+  }
+}
+
+displayHabits(addCommitButton);
 
 const data = {
   1456380083: 13,
@@ -63,3 +103,4 @@ cal.init({
     empty: ':( Nothing on {date}',
   },
 });
+
