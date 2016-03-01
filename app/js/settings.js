@@ -14,15 +14,14 @@ saveButton.addEventListener('click', () => {
   const name = userNameField.value;
   config.saveSettings(constants.userNameKey, name);
 
-  const habitsList = document.querySelector('#habitsForm').children;
+  const habitsList = document.querySelector('#habitsForm').getElementsByTagName('input');
   function storeHabits(msg, callback) {
-    // Skip userName, br, saveButton child
-    for (let i = 2; i < habitsList.length - 1; i += 2) {
-      // console.log(habitsList[i].value);
+    // i = 1 to skip userName field
+    for (let i = 1; i < habitsList.length; i += 1) {
       const habit = {
         title: habitsList[i].value,
       };
-      db.habits.insert(habit, (err, newDoc) => {   // Callback is optional
+      db.habits.insert(habit, (err, newDoc) => {
         // newDoc is the newly inserted document, including its _id
         console.log(newDoc);
       });
