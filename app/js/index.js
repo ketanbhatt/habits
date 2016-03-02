@@ -21,67 +21,71 @@ settingsEl.addEventListener('click', () => {
 const habitsTableBody = document.querySelector('#habitsTable tbody');
 
 function displayHabits(callback) {
-  db.habits.find({}, (err, habits) => {
+  // Look up all habits
+  db.habits.find({}, (errHabits, habits) => {
     let tableRowHTML = '';
     for (let i = 0, len = habits.length; i < len; i++) {
-      const rowHabit = `<td>${habits[i].title}</td>`;
-      const rowID = `<td><button class="commitButton" value=${habits[i]._id}>+</button></td>`;
-      tableRowHTML += `<tr>${rowHabit}${rowID}</tr>`;
+      // Make HTML row for the habit to display
+      const divisionHabit = `<td>${habits[i].title}</td>`;
+      const divisionCommitButton = '<td><button class="commitButton icon icon-plus" ' +
+        `value=${habits[i]._id}></button></td>`;
+      tableRowHTML += `<tr>${divisionHabit}${divisionCommitButton}</tr>`;
     }
+    // Add the habit row to the html table
     habitsTableBody.innerHTML = tableRowHTML;
+    // Callback to addCommitButtonListeners
     callback();
   });
 }
 
-function getCurrentDate() {
-  const dt = new Date();
-  const epochDt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).getTime();
-  // Convert to seconds
-  const currentDate = Math.floor(epochDt / 1000);
-  return currentDate;
+function getCurrentDayNoonEpoch() {
+  // Return current day's noon time epoch in seconds
+  const now = Date();
+  const currentDayNoonEpochTemp = Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const currentDayNoonEpoch = Math.floor(currentDayNoonEpochTemp / 1000);
+  return currentDayNoonEpoch;
 }
 
-function addCommitButton() {
+function addCommitButtonListeners() {
+  //  Get all commit buttons from the html
   const commitButtons = document.getElementsByClassName('commitButton');
+  // Add cick listener for each commit button
   for (let i = 0; i < commitButtons.length; i++) {
     commitButtons[i].addEventListener('click', () => {
-      const currentDate = getCurrentDate();
+      // Get current day's noon time epoch in seconds
+      const currentDayNoonEpoch = getCurrentDayNoonEpoch();
 
-      // Get the commit for the day
-      db.commits.find({ date: currentDate }, (err, commit) => {
-        if (commit.length === 0) {
-          // Init a commit for the day
-          // console.log('init');
-          const newCommit = {
-            date: currentDate,
-            commits: {},
-          };
-          db.habits.find({}, (_err, habits) => {
-            for (let j = 0; j < habits.length; j++) {
-              newCommit.commits[habits[j]._id] = 0;
-            }
-            newCommit.commits[commitButtons[i].value] += 1;
+      // Db update query
+      const updateCom = { $inc: {} };
+      updateCom.$inc[`commits.${commitButtons[i].value}`] = 1;
+      // Try to increment the commit count for the habit
+      db.commits.update(
+        { date: currentDayNoonEpoch },
+        updateCom,
+        (errCommitsUpdate, numReplaced) => {
+          // If no doc is updated, init a commit for the day
+          if (numReplaced === 0) {
+            const newCommit = {
+              date: currentDayNoonEpoch,
+              commits: {},
+            };
+            // Look up all habits to insert `id: count` in the commit
+            db.habits.find({}, (errHabitsFind, habits) => {
+              for (let j = 0; j < habits.length; j++) {
+                newCommit.commits[habits[j]._id] = 0;
+              }
+              newCommit.commits[commitButtons[i].value] += 1;
 
-            db.commits.insert(newCommit, (__err, newDoc) => {
-              console.log(newDoc);
+              // Insert the commit in the db
+              db.commits.insert(newCommit);
             });
-          });
-        } else {
-          // Update the commit for the day
-          // console.log('update');
-          const newCommit = commit[0];
-          newCommit.commits[commitButtons[i].value] += 1;
-
-          db.commits.update({ _id: commit[0]._id }, newCommit, {}, (_err, numReplaced) => {
-            console.log(numReplaced);
-          });
-        }
-      });
+          }
+        });
     });
   }
 }
 
-displayHabits(addCommitButton);
+displayHabits(addCommitButtonListeners);
 
 const data = {
   1456380083: 13,
