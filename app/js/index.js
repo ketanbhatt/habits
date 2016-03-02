@@ -8,6 +8,7 @@ const ipc = require('electron').ipcRenderer;
 const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 const db = reqlib('nedb.js');
+const chartHelper = reqlib('app/js/chart.js');
 
 const cal = new CalHeatMap();
 const userName = document.querySelector('#userName');
@@ -43,23 +44,19 @@ function display() {
 
 display();
 
-const data = {
-  1456380083: 13,
-  1456682083: 24,
-  1457482083: 1,
-  1459680083: 5,
-};
-
-cal.init({
-  domain: 'month',
-  subDomain: 'day',
-  range: 1,
-  tooltip: true,
-  cellSize: 20,
-  data,
-  highlight: ['now'],
-  itemName: 'commit',
-  subDomainTitleFormat: {
-    empty: ':( Nothing on {date}',
-  },
+// Create chart
+chartHelper.getCommitLogForCurrentMonth((data) => {
+  cal.init({
+    domain: 'month',
+    subDomain: 'day',
+    range: 1,
+    tooltip: true,
+    cellSize: 20,
+    data,
+    highlight: ['now'],
+    itemName: 'commit',
+    subDomainTitleFormat: {
+      empty: ':( Nothing on {date}',
+    },
+  });
 });
