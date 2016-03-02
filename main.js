@@ -4,48 +4,31 @@ const appRoot = require('app-root-path');
 const reqlib = appRoot.require;
 
 const electron = require('electron');
+
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const ipc = electron.ipcMain;
+const Menu = require('menu');
+const Tray = require('tray');
 
 const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 
+const trayIconPath = `${appRoot}/app/icons/tray.png`;
+let appTray = null;
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow = null;
+let homeWindow = null;
 let settingsWindow = null;
-
-function openHome() {
-  // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    frame: false,
-  });
-
-  // and load the index.html of the app.
-  mainWindow.loadURL(`file://${appRoot}/app/index.html`);
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
-
-  // Emitted when the window is closed.
-  mainWindow.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null;
-  });
-}
 
 function openSettings() {
   if (settingsWindow) return;
 
   // Create the browser window.
   settingsWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 270,
+    height: 400,
   });
 
   // and load the index.html of the app.
@@ -59,6 +42,81 @@ function openSettings() {
   });
 }
 
+function openHome() {
+  // Create the browser window.
+  homeWindow = new BrowserWindow({
+    alwaysOnTop: true,
+    frame: false,
+    movable: false, // only OS X
+    resizable: false, // FIXME: not working
+    show: true,
+    title: 'Habits',
+    height: 600,
+    width: 400,
+    x: 9999, // FIXME: used to get right most position
+    y: 0,
+  });
+
+  // Load the index.html of the app.
+  homeWindow.loadURL(`file://${appRoot}/app/index.html`);
+
+  // Open the DevTools.
+  // homeWindow.webContents.openDevTools();
+
+  // Emitted when the window is closed.
+  homeWindow.on('closed', () => {
+    // Dereference the window object
+    homeWindow = null;
+  });
+
+  // Emitted when the window loses focus.
+  homeWindow.on('blur', () => {
+    // If Settings is being opened, keep Home
+    if (settingsWindow) homeWindow.show();
+    // Hide the window
+    else homeWindow.hide();
+  });
+
+  // Create the tray icon
+  appTray = new Tray(trayIconPath);
+
+  // Create the context menu for tray
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Toggle Window',
+      click: () => {
+        if (homeWindow.isVisible()) homeWindow.hide();
+        else {
+          homeWindow.show();
+          homeWindow.focus();
+        }
+      },
+    },
+    {
+      label: 'Toggle DevTools',
+      click: () => {
+        homeWindow.toggleDevTools();
+      },
+    },
+    { type: 'separator' },
+    { label: 'Quit',
+      click: () => {
+        app.exit(0);
+      },
+    },
+  ]);
+
+  // Configure tray
+  appTray.setToolTip('Habits');
+  appTray.setContextMenu(contextMenu);
+
+  // Focus on Home
+  homeWindow.focus();
+
+  // If userName is not present then open Settings
+  if (!config.readSettings(constants.userNameKey)) openSettings();
+}
+
 ipc.on('open-settings-window', () => {
   if (settingsWindow === null) {
     openSettings();
@@ -67,10 +125,8 @@ ipc.on('open-settings-window', () => {
 
 ipc.on('close-settings-window', () => {
   if (settingsWindow) {
-    // Redraw Home
-    if (mainWindow) mainWindow.close();
-    openHome();
-
+    // Reload Home to reflect changes
+    if (homeWindow) homeWindow.reload();
     // Close Settings
     settingsWindow.close();
   }
@@ -88,7 +144,5 @@ app.on('window-all-closed', () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
-  // If userName is not present then open Settings else open Home
-  if (!config.readSettings(constants.userNameKey)) openSettings();
-  else openHome();
+  openHome();
 });
