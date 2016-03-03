@@ -42,6 +42,11 @@ function openSettings() {
 }
 
 function openHome() {
+  const electronScreen = electron.screen;
+  const size = electronScreen.getPrimaryDisplay().workAreaSize;
+  const windowWidth = 400;
+  const windowHeight = 600;
+
   // Create the Home window.
   homeWindow = new BrowserWindow({
     alwaysOnTop: true,
@@ -50,9 +55,9 @@ function openHome() {
     resizable: false, // FIXME: not working
     show: true,
     title: 'Habits',
-    height: 600,
-    width: 400,
-    x: 9999, // FIXME: used to get right most position
+    height: windowHeight,
+    width: windowWidth,
+    x: size.width - windowWidth / 2,
     y: 0,
   });
 
@@ -80,7 +85,11 @@ function openHome() {
   });
 
   // Create the tray icon
-  appTray = new Tray(`${appRoot}/app/icons/tray.png`);
+  let iconPath = null;
+  if (process.platform === 'win32') iconPath = `${appRoot}/app/icons/tray.ico`;
+  else if (process.platform === 'darwin') iconPath = `${appRoot}/app/icons/tray.icns`;
+  else iconPath = `${appRoot}/app/icons/tray.png`;
+  appTray = new Tray(iconPath);
 
   // Create the context menu for tray
   const contextMenu = Menu.buildFromTemplate([
