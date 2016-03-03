@@ -5,8 +5,8 @@ const reqlib = appRoot.require;
 
 const electron = require('electron');
 
-const app = electron.app;  // Module to control application life.
-const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
+const app = electron.app;  // Module to control application life
+const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window
 const ipc = electron.ipcMain;
 const Menu = require('menu');
 const Tray = require('tray');
@@ -15,39 +15,43 @@ const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 
 // Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
+// be closed automatically when the JavaScript object is garbage collected
 let homeWindow = null;
 let settingsWindow = null;
 let appTray = null;
 
 function openSettings() {
-  // Create the Settings window.
-  settingsWindow = new BrowserWindow({
-    alwaysOnTop: true,
-    height: 400,
-    width: 270,
-  });
+  if (settingsWindow) {
+    settingsWindow.focus();
+  } else {
+    // Create the Settings window
+    settingsWindow = new BrowserWindow({
+      alwaysOnTop: true,
+      frame: false,
+      height: 400,
+      width: 270,
+    });
 
-  // and load the index.html of the app.
-  settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
-  settingsWindow.focus();
+    // Load the index.html of the app
+    settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
+    settingsWindow.focus();
 
-  // settingsWindow.webContents.openDevTools();
+    // settingsWindow.webContents.openDevTools();
 
-  // Emitted when the window is closed.
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-    homeWindow.focus();
-  });
+    // Emitted when the window is closed
+    settingsWindow.on('closed', () => {
+      settingsWindow = null;
+    });
+  }
 }
 
 function openHome() {
   const electronScreen = electron.screen;
   const size = electronScreen.getPrimaryDisplay().workAreaSize;
-  const windowWidth = 400;
-  const windowHeight = 600;
+  const windowWidth = 350;
+  const windowHeight = 550;
 
-  // Create the Home window.
+  // Create the Home window
   homeWindow = new BrowserWindow({
     alwaysOnTop: true,
     frame: false,
@@ -104,6 +108,12 @@ function openHome() {
       },
     },
     {
+      label: 'Open Settings',
+      click: () => {
+        openSettings();
+      },
+    },
+    {
       label: 'Toggle DevTools',
       click: () => {
         homeWindow.toggleDevTools();
@@ -126,17 +136,24 @@ function openHome() {
 }
 
 ipc.on('open-settings-window', () => {
-  if (settingsWindow === null) {
-    openSettings();
-  } else settingsWindow.focus();
+  openSettings();
 });
 
 ipc.on('close-settings-window', () => {
   if (settingsWindow) {
+    // Bring Home up
+    if (!homeWindow.isVisible()) homeWindow.show();
     // Reload Home to reflect changes
-    if (homeWindow) homeWindow.reload();
+    homeWindow.reload();
     // Close Settings
     settingsWindow.close();
+  }
+});
+
+ipc.on('hide-home-window', () => {
+  if (homeWindow) {
+    // Hide Home
+    homeWindow.hide();
   }
 });
 

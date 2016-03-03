@@ -18,6 +18,11 @@ settingsEl.addEventListener('click', () => {
   ipc.send('open-settings-window');
 });
 
+const minimizeEl = document.querySelector('.hide');
+minimizeEl.addEventListener('click', () => {
+  ipc.send('hide-home-window');
+});
+
 // TODO: uncomment
 const habitsTableBody = document.querySelector('#habitsTable tbody');
 
