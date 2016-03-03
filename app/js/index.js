@@ -38,12 +38,12 @@ function displayHabits(callback) {
   });
 }
 
-function getCurrentDayNoonEpoch() {
-  // Return current day's noon time epoch in seconds
+function getCurrentDayEpoch() {
+  // Return current day time epoch in seconds
   const now = new Date();
-  let currentDayNoonEpoch = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  currentDayNoonEpoch = Math.floor(currentDayNoonEpoch / 1000);
-  return currentDayNoonEpoch;
+  let currentDayEpoch = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  currentDayEpoch = Math.floor(currentDayEpoch / 1000);
+  return currentDayEpoch;
 }
 
 function addCommitButtonListeners() {
@@ -52,21 +52,21 @@ function addCommitButtonListeners() {
   // Add cick listener for each commit button
   for (let i = 0; i < commitButtons.length; i++) {
     commitButtons[i].addEventListener('click', () => {
-      // Get current day's noon time epoch in seconds
-      const currentDayNoonEpoch = getCurrentDayNoonEpoch();
+      // Get current day's  time epoch in seconds
+      const currentDayEpoch = getCurrentDayEpoch();
 
       // Db update query
       const updateCom = { $inc: {} };
       updateCom.$inc[`commits.${commitButtons[i].value}`] = 1;
       // Try to increment the commit count for the habit
       db.commits.update(
-        { date: currentDayNoonEpoch },
+        { date: currentDayEpoch },
         updateCom,
         (errCommitsUpdate, numReplaced) => {
           // If no doc is updated, init a commit for the day
           if (numReplaced === 0) {
             const newCommit = {
-              date: currentDayNoonEpoch,
+              date: currentDayEpoch,
               commits: {},
             };
             // Look up all habits to insert `id: count` in the commit
@@ -107,4 +107,3 @@ cal.init({
     empty: ':( Nothing on {date}',
   },
 });
-
