@@ -23,6 +23,11 @@ minimizeEl.addEventListener('click', () => {
   ipc.send('hide-home-window');
 });
 
+const closeEl = document.querySelector('.close');
+closeEl.addEventListener('click', () => {
+  ipc.send('close-home-window');
+});
+
 // TODO: uncomment
 const habitsTableBody = document.querySelector('#habitsTable tbody');
 
