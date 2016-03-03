@@ -14,36 +14,35 @@ const Tray = require('tray');
 const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 
-const trayIconPath = `${appRoot}/app/icons/tray.png`;
-let appTray = null;
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let homeWindow = null;
 let settingsWindow = null;
+let appTray = null;
 
 function openSettings() {
-  if (settingsWindow) return;
-
-  // Create the browser window.
+  // Create the Settings window.
   settingsWindow = new BrowserWindow({
-    width: 270,
+    alwaysOnTop: true,
     height: 400,
+    width: 270,
   });
 
   // and load the index.html of the app.
   settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
+  settingsWindow.focus();
 
   // settingsWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   settingsWindow.on('closed', () => {
     settingsWindow = null;
+    homeWindow.focus();
   });
 }
 
 function openHome() {
-  // Create the browser window.
+  // Create the Home window.
   homeWindow = new BrowserWindow({
     alwaysOnTop: true,
     frame: false,
@@ -60,16 +59,19 @@ function openHome() {
   // Load the index.html of the app.
   homeWindow.loadURL(`file://${appRoot}/app/index.html`);
 
+  // Focus on Home
+  homeWindow.focus();
+
   // Open the DevTools.
   // homeWindow.webContents.openDevTools();
 
-  // Emitted when the window is closed.
+  // Emitted when the window is closed
   homeWindow.on('closed', () => {
     // Dereference the window object
     homeWindow = null;
   });
 
-  // Emitted when the window loses focus.
+  // Emitted when the window loses focus
   homeWindow.on('blur', () => {
     // If Settings is being opened, keep Home
     if (settingsWindow) homeWindow.show();
@@ -78,7 +80,7 @@ function openHome() {
   });
 
   // Create the tray icon
-  appTray = new Tray(trayIconPath);
+  appTray = new Tray(`${appRoot}/app/icons/tray.png`);
 
   // Create the context menu for tray
   const contextMenu = Menu.buildFromTemplate([
@@ -110,9 +112,6 @@ function openHome() {
   appTray.setToolTip('Habits');
   appTray.setContextMenu(contextMenu);
 
-  // Focus on Home
-  homeWindow.focus();
-
   // If userName is not present then open Settings
   if (!config.readSettings(constants.userNameKey)) openSettings();
 }
@@ -120,7 +119,7 @@ function openHome() {
 ipc.on('open-settings-window', () => {
   if (settingsWindow === null) {
     openSettings();
-  }
+  } else settingsWindow.focus();
 });
 
 ipc.on('close-settings-window', () => {
