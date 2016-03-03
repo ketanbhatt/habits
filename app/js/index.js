@@ -40,9 +40,9 @@ function displayHabits(callback) {
 
 function getCurrentDayNoonEpoch() {
   // Return current day's noon time epoch in seconds
-  const now = Date();
-  const currentDayNoonEpochTemp = Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const currentDayNoonEpoch = Math.floor(currentDayNoonEpochTemp / 1000);
+  const now = new Date();
+  let currentDayNoonEpoch = Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  currentDayNoonEpoch = Math.floor(currentDayNoonEpoch / 1000);
   return currentDayNoonEpoch;
 }
 
