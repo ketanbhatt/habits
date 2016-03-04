@@ -4,30 +4,39 @@ const appRoot = require('app-root-path');
 const reqlib = appRoot.require;
 
 const electron = require('electron');
-
 const app = electron.app;  // Module to control application life
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window
 const ipc = electron.ipcMain;
-// TODO: Remove if going for one click tray icon
-// const Menu = require('menu');
+
+const Menu = require('menu');
+const Positioner = require('electron-positioner');
 const Tray = require('tray');
 
+// User config
 const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected
-let homeWindow = null;
-let settingsWindow = null;
-let appTray = null;
+// Utilities
+const isDarwin = (process.platform === 'darwin'); // OS X
+const isLinux = (process.platform === 'linux');
+const isWindows = (process.platform === 'win32');
 
+// Tray icon path
+let iconPath = null;
+if (isWindows) iconPath = `${appRoot}/app/icons/tray.ico`;
+else iconPath = `${appRoot}/app/icons/tray.png`;
+
+// Keep a global reference of the window object
+let settingsWindow = null;
+
+// Create, configure and load settings window
 function openSettings() {
+  // If settings is already open, bring to front
   if (settingsWindow) {
-    settingsWindow.focus();
+    settingsWindow.show();
   } else {
-    // Create the Settings window
+    // Create the settings window
     settingsWindow = new BrowserWindow({
-      alwaysOnTop: true,
       frame: false,
       height: 400,
       width: 270,
@@ -35,7 +44,6 @@ function openSettings() {
 
     // Load the index.html of the app
     settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
-    settingsWindow.focus();
 
     // settingsWindow.webContents.openDevTools();
 
@@ -46,150 +54,197 @@ function openSettings() {
   }
 }
 
-function openHome() {
-  const electronScreen = electron.screen;
-  const size = electronScreen.getPrimaryDisplay().workAreaSize;
-  const windowWidth = 350;
-  const windowHeight = 550;
-  let windowType = '';
-  if (process.platform === 'linux') windowType = 'splash';
-  else windowType = 'normal';
-
-  // Create the Home window
-  homeWindow = new BrowserWindow({
-    alwaysOnTop: true,
-    frame: false,
-    movable: false, // only OS X
-    resizable: false, // FIXME: not working
-    show: true,
-    title: 'Habits',
-    height: windowHeight,
-    width: windowWidth,
-    x: size.width - windowWidth / 2,
-    y: 0,
-    type: windowType,
-  });
-
-  // Load the index.html of the app.
-  homeWindow.loadURL(`file://${appRoot}/app/index.html`);
-
-  // Focus on Home
-  homeWindow.focus();
-
-  // Open the DevTools.
-  // homeWindow.webContents.openDevTools();
-
-  // Emitted when the window is closed
-  homeWindow.on('closed', () => {
-    // Dereference the window object
-    homeWindow = null;
-  });
-
-  // Emitted when the window loses focus
-  homeWindow.on('blur', () => {
-    // Hide home if Settings is not open
-    if (settingsWindow === null) homeWindow.hide();
-  });
-
-  // If userName is not present then open Settings
-  if (!config.readSettings(constants.userNameKey)) openSettings();
-}
-
-ipc.on('open-settings-window', () => {
-  openSettings();
-});
-
-ipc.on('close-settings-window', () => {
-  if (settingsWindow) {
-    if (homeWindow) {
-      // Bring Home up
-      if (!homeWindow.isVisible()) homeWindow.show();
-      // Reload Home to reflect changes
-      homeWindow.reload();
-    } else {
-      // Create Home window
-      openHome();
-    }
-    // Close Settings
-    settingsWindow.close();
-  }
-});
-
-ipc.on('hide-home-window', () => {
-  if (homeWindow) {
-    // Hide Home
-    homeWindow.hide();
-  }
-});
-
-ipc.on('close-home-window', () => {
-  if (homeWindow) {
-    // Close Home
-    homeWindow.close();
-  }
-});
-
-// Quit when all windows are closed
-app.on('window-all-closed', () => {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows
+// Emitted when the app is ready
 app.on('ready', () => {
-  // Create the tray icon
-  let iconPath = null;
-  if (process.platform === 'win32') iconPath = `${appRoot}/app/icons/tray.ico`;
-  else if (process.platform === 'darwin') iconPath = `${appRoot}/app/icons/tray.icns`;
-  else iconPath = `${appRoot}/app/icons/tray.png`;
+  let cachedBounds;
+  const appIcon = new Tray(iconPath);
+  const windowPosition = (isWindows) ? 'trayBottomCenter' : 'trayCenter';
 
-  // Configure tray
-  appTray = new Tray(iconPath);
-  appTray.setToolTip('Habits');
+  function showWindow(trayBounds) {
+    let noBoundsPosition;
 
-  // TODO: Remove if going for one click tray icon
-  // Create the context menu for tray
-  // const contextMenu = Menu.buildFromTemplate([
-  //   {
-  //     label: 'Toggle Window',
-  //     click: () => {
-  //       if (homeWindow.isVisible()) homeWindow.hide();
-  //       else {
-  //         homeWindow.show();
-  //         homeWindow.focus();
-  //       }
-  //     },
-  //   },
-  //   {
-  //     label: 'Open Settings',
-  //     click: () => {
-  //       openSettings();
-  //     },
-  //   },
-  //   {
-  //     label: 'Toggle DevTools',
-  //     click: () => {
-  //       homeWindow.toggleDevTools();
-  //     },
-  //   },
-  //   { type: 'separator' },
-  //   { label: 'Quit',
-  //     click: () => {
-  //       app.exit(0);
-  //     },
-  //   },
-  // ]);
-  // appTray.setContextMenu(contextMenu);
+    // Calculate variables for right position of app window
+    if (!isDarwin && trayBounds !== undefined) {
+      const displaySize = electron.screen.getPrimaryDisplay().workAreaSize;
+      let trayBoundsX = trayBounds.x;
+      let trayBoundsY = trayBounds.y;
 
-  // One - click tray icon
-  appTray.on('click', () => {
-    homeWindow.show();
+      if (isLinux) {
+        const cursorPointer = electron.screen.getCursorScreenPoint();
+        trayBoundsX = cursorPointer.x;
+        trayBoundsY = cursorPointer.y;
+      }
+
+      const x = (trayBoundsX < (displaySize.width / 2)) ? 'left' : 'right';
+      const y = (trayBoundsY < (displaySize.height / 2)) ? 'top' : 'bottom';
+
+      if (x === 'right' && y === 'bottom') {
+        noBoundsPosition = (isWindows) ? 'trayBottomCenter' : 'bottomRight';
+      } else if (x === 'left' && y === 'bottom') {
+        noBoundsPosition = 'bottomLeft';
+      } else if (y === 'top') {
+        noBoundsPosition = (isWindows) ? 'trayCenter' : 'topRight';
+      }
+    } else if (trayBounds === undefined) {
+      noBoundsPosition = (isWindows) ? 'bottomRight' : 'topRight';
+    }
+
+    // Calculate position for app window
+    const position = appIcon.positioner.calculate(noBoundsPosition || windowPosition, trayBounds);
+    appIcon.window.setPosition(position.x, position.y);
+    appIcon.window.show();
+    appIcon.window.focus();
+  }
+
+  // Hide app window
+  function hideWindow() {
+    if (!appIcon.window) return;
+    appIcon.window.hide();
+  }
+
+  // Initialize context menu
+  function initContextMenu() {
+    const template = [
+      {
+        label: 'Toggle Window',
+        click: () => {
+          if (appIcon.window && appIcon.window.isVisible()) hideWindow();
+          else {
+            showWindow(cachedBounds);
+          }
+        },
+      },
+      {
+        label: 'Open Settings',
+        click: () => {
+          openSettings();
+        },
+      },
+      {
+        label: 'Toggle DevTools',
+        click: () => {
+          appIcon.window.toggleDevTools();
+        },
+      },
+      { type: 'separator' },
+      { label: 'Quit',
+        click: () => {
+          app.exit(0);
+        },
+    }];
+    const contextMenu = Menu.buildFromTemplate(template);
+    return contextMenu;
+  }
+
+  // Initialize app window
+  function initAppWindow() {
+    let windowType = '';
+    if (isLinux) windowType = 'splash';
+    else windowType = 'normal';
+
+    // App window config
+    const defaults = {
+      width: 400,
+      height: 350,
+      alwaysOnTop: true,
+      frame: false,
+      show: false,
+      title: 'Habits',
+      type: windowType,
+      webPreferences: {
+        overlayScrollbars: true,
+        preload: true,
+      },
+    };
+
+    const contextMenu = initContextMenu();
+
+    // Set context menu for Linux
+    if (isLinux) appIcon.setContextMenu(contextMenu);
+    // Set click events for OS X, Windows
+    else {
+      // Display or hide app window
+      appIcon.on('click', (e, bounds) => {
+        if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) hideWindow();
+        if (appIcon.window && appIcon.window.isVisible()) hideWindow();
+        cachedBounds = bounds || cachedBounds;
+        showWindow(cachedBounds);
+      });
+      // Display context menu
+      appIcon.on('right-click', () => {
+        appIcon.popUpContextMenu(contextMenu);
+      });
+    }
+
+    // App icon config
+    appIcon.window = new BrowserWindow(defaults);
+    appIcon.positioner = new Positioner(appIcon.window);
+    appIcon.window.loadURL(`file://${appRoot}/app/index.html`);
+    appIcon.window.setVisibleOnAllWorkspaces(true);
+
+    // Hide app window on focus out
+    appIcon.window.on('blur', hideWindow);
+  }
+
+  initAppWindow();
+
+  // Quit
+  ipc.on('app-quit', () => {
+    app.quit();
   });
 
-  // Create Home window
-  openHome();
+  // Reopen app window after saving settings
+  ipc.on('reopen-window', () => {
+    showWindow(cachedBounds);
+  });
+
+  // Hide Home to notifications bar
+  ipc.on('hide-window', () => {
+    hideWindow();
+  });
+
+  // TODO: Implement
+  // Update app icon
+  // ipc.on('update-icon', function(event, arg) {
+  //   if (arg === 'TrayActive') {
+  //     appIcon.setImage(iconActive);
+  //   } else {
+  //     appIcon.setImage(iconIdle);
+  //   }
+  // });
+
+  // Open settings window
+  ipc.on('open-settings-window', () => {
+    openSettings();
+  });
+
+  // Close settings window
+  ipc.on('close-settings-window', () => {
+    if (settingsWindow) {
+      settingsWindow.close();
+    }
+    // Relfect changes on app window
+    appIcon.window.reload();
+
+    // Open app window
+    // showWindow();
+  });
+
+  appIcon.setToolTip('Habits');
+
+  // TODO: Implement
+  // Show a dialog box
+  // const dialog = require('dialog');
+  // dialog.showMessageBox({
+  //   type: 'info',
+  //   buttons: ['Close'],
+  //   title: 'Yo',
+  //   message: 'Welcome',
+  // });
+
+  // If userName is not present then open settings
+  if (!config.readSettings(constants.userNameKey)) openSettings();
+
+  // Open app window at start
+  showWindow();
 });

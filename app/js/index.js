@@ -13,19 +13,16 @@ const cal = new CalHeatMap();
 const userName = document.querySelector('#userName');
 userName.innerHTML = config.readSettings(constants.userNameKey);
 
+// Open settings window button
 const settingsEl = document.querySelector('.settings');
 settingsEl.addEventListener('click', () => {
   ipc.send('open-settings-window');
 });
 
-const minimizeEl = document.querySelector('.hide');
-minimizeEl.addEventListener('click', () => {
-  ipc.send('hide-home-window');
-});
-
-const closeEl = document.querySelector('.close');
-closeEl.addEventListener('click', () => {
-  ipc.send('close-home-window');
+// Hide to notifications bar button
+const hideEl = document.querySelector('.hide');
+hideEl.addEventListener('click', () => {
+  ipc.send('hide-window');
 });
 
 // TODO: uncomment

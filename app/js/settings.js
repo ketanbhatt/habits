@@ -30,8 +30,3 @@ saveButton.addEventListener('click', () => {
   }
   storeHabits('close-settings-window', ipc.send);
 });
-
-const closeEl = document.querySelector('.close');
-closeEl.addEventListener('click', () => {
-  ipc.send('close-settings-window');
-});
