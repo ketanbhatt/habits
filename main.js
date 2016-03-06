@@ -27,40 +27,16 @@ if (isWindows) iconPath = `${appRoot}/app/icons/tray.ico`;
 else iconPath = `${appRoot}/app/icons/tray.png`;
 
 // Keep a global reference of the window object
+let appIcon = null;
 let settingsWindow = null;
-
-// Create, configure and load settings window
-function openSettings() {
-  // If settings is already open, bring to front
-  if (settingsWindow) {
-    settingsWindow.show();
-  } else {
-    // Create the settings window
-    settingsWindow = new BrowserWindow({
-      frame: false,
-      height: 400,
-      width: 270,
-    });
-
-    // Load the index.html of the app
-    settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
-
-    // settingsWindow.webContents.openDevTools();
-
-    // Emitted when the window is closed
-    settingsWindow.on('closed', () => {
-      settingsWindow = null;
-    });
-  }
-}
 
 // Emitted when the app is ready
 app.on('ready', () => {
   let cachedBounds;
-  const appIcon = new Tray(iconPath);
+  appIcon = new Tray(iconPath);
   const windowPosition = (isWindows) ? 'trayBottomCenter' : 'trayCenter';
 
-  function showWindow(trayBounds) {
+  function showWindow(trayBounds, view) {
     let noBoundsPosition;
 
     // Calculate variables for right position of app window
@@ -92,14 +68,59 @@ app.on('ready', () => {
     // Calculate position for app window
     const position = appIcon.positioner.calculate(noBoundsPosition || windowPosition, trayBounds);
     appIcon.window.setPosition(position.x, position.y);
-    appIcon.window.show();
-    appIcon.window.focus();
+    if (view && view === 'inactive') appIcon.window.showInactive();
+    else appIcon.window.show();
   }
 
   // Hide app window
   function hideWindow() {
     if (!appIcon.window) return;
     appIcon.window.hide();
+  }
+
+    // Create, configure and load settings window
+  function openSettings() {
+    // Show app window
+    showWindow(cachedBounds, 'inactive');
+
+    // If settings is already open, bring to front
+    if (settingsWindow) {
+      settingsWindow.show();
+    } else {
+      // Create the settings window
+      settingsWindow = new BrowserWindow({
+        frame: false,
+        height: 400,
+        width: 270,
+      });
+
+      // Load the index.html of the app
+      settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
+
+      // settingsWindow.webContents.openDevTools();
+
+      // Emitted when the window is closed
+      settingsWindow.on('closed', () => {
+        settingsWindow = null;
+
+        // Relfect changes on app window
+        appIcon.window.reload();
+        // Open app window
+        showWindow();
+      });
+
+      // Emitted when the window looses focus
+      settingsWindow.on('blur', () => {
+        // Hide app window
+        hideWindow();
+      });
+
+      // Emitted when the window gets focus
+      settingsWindow.on('focus', () => {
+        // Show app window
+        showWindow(cachedBounds, 'inactive');
+      });
+    }
   }
 
   // Initialize context menu
@@ -183,7 +204,9 @@ app.on('ready', () => {
     appIcon.window.setVisibleOnAllWorkspaces(true);
 
     // Hide app window on focus out
-    appIcon.window.on('blur', hideWindow);
+    appIcon.window.on('blur', () => {
+      if (!settingsWindow) hideWindow();
+    });
   }
 
   initAppWindow();
@@ -223,11 +246,6 @@ app.on('ready', () => {
     if (settingsWindow) {
       settingsWindow.close();
     }
-    // Relfect changes on app window
-    appIcon.window.reload();
-
-    // Open app window
-    // showWindow();
   });
 
   appIcon.setToolTip('Habits');
@@ -242,9 +260,18 @@ app.on('ready', () => {
   //   message: 'Welcome',
   // });
 
+  // TODO : Implement
+  // Send a notification
+  // npm install --save node-notifier
+  // const notifier = require('node-notifier');
+  // notifier.notify({
+  //   title: 'Yo',
+  //   message: 'welcome',
+  // });
+
   // If userName is not present then open settings
   if (!config.readSettings(constants.userNameKey)) openSettings();
 
   // Open app window at start
-  showWindow();
+  // showWindow();
 });
