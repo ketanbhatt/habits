@@ -8,6 +8,18 @@ const constants = reqlib('constants.js');
 
 const db = reqlib('nedb.js');
 
+// Open home window button
+const homeEl = document.querySelector('.home');
+homeEl.addEventListener('click', () => {
+  ipc.send('open-window');
+});
+
+// Hide app window to notifications bar button
+const hideEl = document.querySelector('.hide');
+hideEl.addEventListener('click', () => {
+  ipc.send('hide-window');
+});
+
 const saveButton = document.querySelector('#saveButton');
 saveButton.addEventListener('click', () => {
   const userNameField = document.querySelector('#userNameField');
@@ -21,17 +33,9 @@ saveButton.addEventListener('click', () => {
       const habit = {
         title: habitsList[i].value,
       };
-      db.habits.insert(habit, (err, newDoc) => {
-        // newDoc is the newly inserted document, including its _id
-        console.log(newDoc);
-      });
+      db.habits.insert(habit);
     }
     callback(msg);
   }
-  storeHabits('close-settings-window', ipc.send);
-});
-
-const closeEl = document.querySelector('.close');
-closeEl.addEventListener('click', () => {
-  ipc.send('close-settings-window');
+  storeHabits('open-window', ipc.send);
 });

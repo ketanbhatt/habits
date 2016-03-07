@@ -19,7 +19,7 @@ settingsEl.addEventListener('click', () => {
   ipc.send('open-settings-window');
 });
 
-// Hide to notifications bar button
+// Hide app window to notifications bar button
 const hideEl = document.querySelector('.hide');
 hideEl.addEventListener('click', () => {
   ipc.send('hide-window');

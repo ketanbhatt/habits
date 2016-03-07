@@ -28,15 +28,19 @@ else iconPath = `${appRoot}/app/icons/tray.png`;
 
 // Keep a global reference of the window object
 let appIcon = null;
-let settingsWindow = null;
 
 // Emitted when the app is ready
 app.on('ready', () => {
+  // For app window position
   let cachedBounds;
+
+  // Initialize tray
   appIcon = new Tray(iconPath);
+
+  // Set app window position
   const windowPosition = (isWindows) ? 'trayBottomCenter' : 'trayCenter';
 
-  function showWindow(trayBounds, view) {
+  function showWindow(trayBounds) {
     let noBoundsPosition;
 
     // Calculate variables for right position of app window
@@ -68,8 +72,8 @@ app.on('ready', () => {
     // Calculate position for app window
     const position = appIcon.positioner.calculate(noBoundsPosition || windowPosition, trayBounds);
     appIcon.window.setPosition(position.x, position.y);
-    if (view && view === 'inactive') appIcon.window.showInactive();
-    else appIcon.window.show();
+    // Show app window
+    appIcon.window.show();
   }
 
   // Hide app window
@@ -78,56 +82,12 @@ app.on('ready', () => {
     appIcon.window.hide();
   }
 
-    // Create, configure and load settings window
-  function openSettings() {
-    // Show app window
-    showWindow(cachedBounds, 'inactive');
-
-    // If settings is already open, bring to front
-    if (settingsWindow) {
-      settingsWindow.show();
-    } else {
-      // Create the settings window
-      settingsWindow = new BrowserWindow({
-        frame: false,
-        height: 400,
-        width: 270,
-      });
-
-      // Load the index.html of the app
-      settingsWindow.loadURL(`file://${appRoot}/app/settings.html`);
-
-      // settingsWindow.webContents.openDevTools();
-
-      // Emitted when the window is closed
-      settingsWindow.on('closed', () => {
-        settingsWindow = null;
-
-        // Relfect changes on app window
-        appIcon.window.reload();
-        // Open app window
-        showWindow();
-      });
-
-      // Emitted when the window looses focus
-      settingsWindow.on('blur', () => {
-        // Hide app window
-        hideWindow();
-      });
-
-      // Emitted when the window gets focus
-      settingsWindow.on('focus', () => {
-        // Show app window
-        showWindow(cachedBounds, 'inactive');
-      });
-    }
-  }
-
   // Initialize context menu
   function initContextMenu() {
     const template = [
       {
-        label: 'Toggle Window',
+        // Show/Hide app window
+        label: 'Show/Hide',
         click: () => {
           if (appIcon.window && appIcon.window.isVisible()) hideWindow();
           else {
@@ -136,23 +96,41 @@ app.on('ready', () => {
         },
       },
       {
-        label: 'Open Settings',
+        // Load home page
+        label: 'Home',
         click: () => {
-          openSettings();
+          if (!(appIcon.window.webContents.getURL().indexOf('index') > -1)) {
+            appIcon.window.loadURL(`file://${appRoot}/app/index.html`);
+          }
+          showWindow(cachedBounds);
         },
       },
       {
+        // Load settings page
+        label: 'Settings',
+        click: () => {
+          if (!(appIcon.window.webContents.getURL().indexOf('settings') > -1)) {
+            appIcon.window.loadURL(`file://${appRoot}/app/settings.html`);
+          }
+          showWindow(cachedBounds);
+        },
+      },
+      {
+        // Quit app
+        label: 'Quit',
+        click: () => {
+          app.exit(0);
+        },
+      },
+      { type: 'separator' },
+      {
+        // Toggle DevTools
         label: 'Toggle DevTools',
         click: () => {
           appIcon.window.toggleDevTools();
         },
       },
-      { type: 'separator' },
-      { label: 'Quit',
-        click: () => {
-          app.exit(0);
-        },
-    }];
+    ];
     const contextMenu = Menu.buildFromTemplate(template);
     return contextMenu;
   }
@@ -200,13 +178,13 @@ app.on('ready', () => {
     // App icon config
     appIcon.window = new BrowserWindow(defaults);
     appIcon.positioner = new Positioner(appIcon.window);
-    appIcon.window.loadURL(`file://${appRoot}/app/index.html`);
     appIcon.window.setVisibleOnAllWorkspaces(true);
 
+    // Load home page
+    appIcon.window.loadURL(`file://${appRoot}/app/index.html`);
+
     // Hide app window on focus out
-    appIcon.window.on('blur', () => {
-      if (!settingsWindow) hideWindow();
-    });
+    appIcon.window.on('blur', hideWindow);
   }
 
   initAppWindow();
@@ -216,12 +194,19 @@ app.on('ready', () => {
     app.quit();
   });
 
-  // Reopen app window after saving settings
-  ipc.on('reopen-window', () => {
-    showWindow(cachedBounds);
+  // Load home page
+  ipc.on('open-window', () => {
+    if (!(appIcon.window.webContents.getURL().indexOf('index') > -1)) {
+      appIcon.window.loadURL(`file://${appRoot}/app/index.html`);
+    }
   });
 
-  // Hide Home to notifications bar
+  // Load settings page
+  ipc.on('open-settings-window', () => {
+    appIcon.window.loadURL(`file://${appRoot}/app/settings.html`);
+  });
+
+  // Hide app window to notifications bar
   ipc.on('hide-window', () => {
     hideWindow();
   });
@@ -235,20 +220,6 @@ app.on('ready', () => {
   //     appIcon.setImage(iconIdle);
   //   }
   // });
-
-  // Open settings window
-  ipc.on('open-settings-window', () => {
-    openSettings();
-  });
-
-  // Close settings window
-  ipc.on('close-settings-window', () => {
-    if (settingsWindow) {
-      settingsWindow.close();
-    }
-  });
-
-  appIcon.setToolTip('Habits');
 
   // TODO: Implement
   // Show a dialog box
@@ -269,9 +240,12 @@ app.on('ready', () => {
   //   message: 'welcome',
   // });
 
-  // If userName is not present then open settings
-  if (!config.readSettings(constants.userNameKey)) openSettings();
+  //
+  appIcon.setToolTip('Habit tracking, github style!');
+
+  // If userName is not present then load settings page
+  if (!config.readSettings(constants.userNameKey)) appIcon.window.loadURL(`file://${appRoot}/app/settings.html`);
 
   // Open app window at start
-  // showWindow();
+  // showWindow(cachedBounds);
 });
