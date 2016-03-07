@@ -246,6 +246,7 @@ app.on('ready', () => {
   // If userName is not present then load settings page
   if (!config.readSettings(constants.userNameKey)) appIcon.window.loadURL(`file://${appRoot}/app/settings.html`);
 
-  // Open app window at start
+  // Open app window at start (keep here for debuging)
   // showWindow(cachedBounds);
+  // appIcon.window.toggleDevTools();
 });
