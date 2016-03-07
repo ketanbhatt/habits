@@ -71,6 +71,7 @@ function addCommitButtonListeners() {
         { date: currentDayEpoch },
         updateCom,
         (errCommitsUpdate, numReplaced) => {
+          let updateCal;
           // If no doc is updated, init a commit for the day
           if (numReplaced === 0) {
             const newCommit = {
@@ -86,6 +87,24 @@ function addCommitButtonListeners() {
 
               // Insert the commit in the db
               db.commits.insert(newCommit);
+
+              // Update chart
+              updateCal = {};
+              updateCal[`${currentDayEpoch}`] = 1;
+              cal.update(updateCal, true, cal.RESET_SINGLE_ON_UPDATE);
+            });
+          } else {
+            db.commits.findOne({ date: currentDayEpoch }, (errCommit, commit) => {
+              // Calculate commits count for the day
+              const commitsForHabits = commit.commits;
+              const habitIds = Object.keys(commitsForHabits);
+              const totalCommitsForDay = habitIds.reduce(
+                (total, habitId) => total + commitsForHabits[habitId], 0
+              );
+              // Update chart
+              updateCal = {};
+              updateCal[`${currentDayEpoch}`] = totalCommitsForDay;
+              cal.update(updateCal, true, cal.RESET_SINGLE_ON_UPDATE);
             });
           }
         });
@@ -102,12 +121,13 @@ chartHelper.getCommitLogForCurrentMonth((data) => {
     subDomain: 'day',
     range: 1,
     tooltip: true,
-    cellSize: 20,
+    cellSize: 30,
     data,
     highlight: ['now'],
     itemName: 'commit',
     subDomainTitleFormat: {
       empty: ':( Nothing on {date}',
     },
+    displayLegend: false,
   });
 });
