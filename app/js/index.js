@@ -8,6 +8,7 @@ const ipc = require('electron').ipcRenderer;
 const config = reqlib('configuration.js');
 const constants = reqlib('constants.js');
 const db = reqlib('nedb.js');
+const chartHelper = reqlib('app/js/chart.js');
 
 const cal = new CalHeatMap();
 const userName = document.querySelector('#userName');
@@ -25,48 +26,88 @@ hideEl.addEventListener('click', () => {
   ipc.send('hide-window');
 });
 
-// TODO: uncomment
 const habitsTableBody = document.querySelector('#habitsTable tbody');
 
-function display() {
-  db.habits.find({}, (err, habits) => {
+function displayHabits(callback) {
+  // Look up all habits
+  db.habits.find({}, (errHabits, habits) => {
     let tableRowHTML = '';
     for (let i = 0, len = habits.length; i < len; i++) {
-      const rowHabit = `<td>${habits[i].title}</td>`;
-      const rowID = `<td>${habits[i]._id}</td>`;
-      tableRowHTML += `<tr>${rowHabit}${rowID}</tr>`;
+      // Make HTML row for the habit to display
+      const divisionHabit = `<td>${habits[i].title}</td>`;
+      const divisionCommitButton = '<td><button class="commitButton icon icon-plus" ' +
+        `value=${habits[i]._id}></button></td>`;
+      tableRowHTML += `<tr>${divisionHabit}${divisionCommitButton}</tr>`;
     }
+    // Add the habit row to the html table
     habitsTableBody.innerHTML = tableRowHTML;
+    // Callback to addCommitButtonListeners
+    callback();
   });
 }
 
-//  function getCurrentDate() {
-//  const dt = new Date();
-//  const epochDt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).getTime();
-//  // Convert to seconds
-//  const currentDate = Math.floor(epochDt / 1000);
-//  return currentDate;
-//  }
+function getCurrentDayEpoch() {
+  // Return current day time epoch in seconds
+  const now = new Date();
+  let currentDayEpoch = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  currentDayEpoch = Math.floor(currentDayEpoch / 1000);
+  return currentDayEpoch;
+}
 
-display();
+function addCommitButtonListeners() {
+  //  Get all commit buttons from the html
+  const commitButtons = document.getElementsByClassName('commitButton');
+  // Add cick listener for each commit button
+  for (let i = 0; i < commitButtons.length; i++) {
+    commitButtons[i].addEventListener('click', () => {
+      // Get current day's  time epoch in seconds
+      const currentDayEpoch = getCurrentDayEpoch();
 
-const data = {
-  1456380083: 13,
-  1456682083: 24,
-  1457482083: 1,
-  1459680083: 5,
-};
+      // Db update query
+      const updateCom = { $inc: {} };
+      updateCom.$inc[`commits.${commitButtons[i].value}`] = 1;
+      // Try to increment the commit count for the habit
+      db.commits.update(
+        { date: currentDayEpoch },
+        updateCom,
+        (errCommitsUpdate, numReplaced) => {
+          // If no doc is updated, init a commit for the day
+          if (numReplaced === 0) {
+            const newCommit = {
+              date: currentDayEpoch,
+              commits: {},
+            };
+            // Look up all habits to insert `id: count` in the commit
+            db.habits.find({}, (errHabitsFind, habits) => {
+              for (let j = 0; j < habits.length; j++) {
+                newCommit.commits[habits[j]._id] = 0;
+              }
+              newCommit.commits[commitButtons[i].value] += 1;
 
-cal.init({
-  domain: 'month',
-  subDomain: 'day',
-  range: 1,
-  tooltip: true,
-  cellSize: 20,
-  data,
-  highlight: ['now'],
-  itemName: 'commit',
-  subDomainTitleFormat: {
-    empty: ':( Nothing on {date}',
-  },
+              // Insert the commit in the db
+              db.commits.insert(newCommit);
+            });
+          }
+        });
+    });
+  }
+}
+
+displayHabits(addCommitButtonListeners);
+
+// Create chart
+chartHelper.getCommitLogForCurrentMonth((data) => {
+  cal.init({
+    domain: 'month',
+    subDomain: 'day',
+    range: 1,
+    tooltip: true,
+    cellSize: 20,
+    data,
+    highlight: ['now'],
+    itemName: 'commit',
+    subDomainTitleFormat: {
+      empty: ':( Nothing on {date}',
+    },
+  });
 });
