@@ -150,10 +150,6 @@ app.on('ready', () => {
       show: false,
       title: 'Habits',
       type: windowType,
-      webPreferences: {
-        overlayScrollbars: true,
-        preload: true,
-      },
     };
 
     const contextMenu = initContextMenu();

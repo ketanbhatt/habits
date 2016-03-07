@@ -6,6 +6,13 @@
     <link rel="stylesheet" href="../node_modules/cal-heatmap/cal-heatmap.css" />
     <link rel="stylesheet" href="css/index.css" />
     <script type="text/javascript" src="../node_modules/cal-heatmap/cal-heatmap.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
+    <script type="text/javascript">
+        $(window).load(function() {
+            $("#loader").fadeOut("slow");
+        });
+    </script>
 </head>
 <body>
 <div class="window">
@@ -20,6 +27,7 @@
             </button>
         </div>
     </header>
+    <div id="loader"></div>
     <div class="window-content">
         <div class="padded-more">
             Hello <span id="userName"></span>, your habits are:
